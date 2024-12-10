@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+
+export PATH=/home/software/qemu4/bin:$PATH
+
+# Exit on any errors
+set -e
+
+# make the root filesystem (lfs)
+make ramdisk.img
+
+# hack: delete `src/asm/ramdisk.o` so the root filesystem gets updated (we use a RAM filesystem to avoid complications)
+rm -f src/asm/ramdisk.o
+
+# build the kernel and the isoimage for it
+make isoimage -j 8
+
+# Run the kernel in QEMU with some default arguments and devices.
+qemu-system-x86_64 -cdrom nautilus.iso -m 2G -smp 1 -serial mon:stdio -vga std $@
